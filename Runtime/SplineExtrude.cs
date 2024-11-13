@@ -297,12 +297,13 @@ namespace UnityEngine.Splines
 
         void OnSplineChanged(Spline spline, int knotIndex, SplineModification modificationType)
         {
-            if (!m_RebuildOnSplineChange)
-                return;
+	        if (!m_RebuildOnSplineChange
+		        || m_RebuildRequested) // We've already scheduled a rebuild.
+		        return;
 
             var isMainSpline = m_Container != null && Splines.Contains(spline);
             var isShapeSpline = (m_Shape is SplineShape splineShape) && splineShape.Spline != null && splineShape.Spline.Equals(spline);
-            m_RebuildRequested = isMainSpline || isShapeSpline;
+            m_RebuildRequested |= isMainSpline || isShapeSpline;
         }
 
         void Update()
@@ -344,6 +345,7 @@ namespace UnityEngine.Splines
             AutosmoothNormals();
 
             m_NextScheduledRebuild = Time.time + 1f / m_RebuildFrequency;
+            m_RebuildRequested = false;
 
 #if UNITY_PHYSICS_MODULE
             if (m_UpdateColliders)
